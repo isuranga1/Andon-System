@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const UserModel = require("./models/users");
+const ConsoleIDModel = require("./models/ConsoleIds");
+const CallIDModel = require("./models/Calls");
 const http = require("http"); // this is used for socket.io
 const { Server } = require("socket.io");
 
@@ -25,7 +27,7 @@ app.use(cors()); //import the library
 const io = new Server(server, {
   // Enables CORS for easy connection with React frontend (http://localhost:3000)
   cors: {
-    origin: "http://localhost:3000",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
@@ -49,6 +51,33 @@ app.get("/getUsers", async (req, res) => {
     res.status(500).json({ message: "Error fetching machines" });
   }
 });
+ 
+
+// get machine numbers and console ID s
+app.get("/getMachines", async (req, res) => {
+  // demo by thunderclient
+  try {
+    const machine = await ConsoleIDModel.find({});
+    res.json(machine);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching machines" });
+  }
+});
+
+app.get("/getCalls", async (req, res) => {
+  // demo by thunderclient
+  try {
+    const color= await CallIDModel.find({});
+    res.json(color);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching machines" });
+  }
+});
+
+
+
 
 //post request from front end
 app.post("/createUser", async (req, res) => {
@@ -58,6 +87,24 @@ app.post("/createUser", async (req, res) => {
   const newUser = new UserModel(user);
   await newUser.save();
   res.json(user);
+});
+
+app.post("/createMachine", async (req, res) => {
+  // demo by thunderclient
+
+  const machine = req.body;
+  const newMachine = new ConsoleIDModel(machine);
+  await newMachine.save();
+  res.json(machine);
+});
+
+app.post("/createCall", async (req, res) => {
+  // demo by thunderclient
+
+  const call = req.body;
+  const newCall = new CallIDModel(call);
+  await newCall.save();
+  res.json(call);
 });
 
 server.listen(3001, () => {

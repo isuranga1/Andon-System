@@ -8,14 +8,7 @@ const UserSchema = new mongoose.Schema({
         required:true,
     },
 
-    age: {
-
-        type: Number,
-        required: true,
-
-    },
-
-    username:{
+    deptnumber:{
         type: String,
         required:true,
     }
