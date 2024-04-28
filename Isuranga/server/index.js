@@ -1,9 +1,9 @@
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-const UserModel = require("./models/users");
+const UserModel = require("./models/Users");
 const ConsoleIDModel = require("./models/ConsoleIds");
-const CallIDModel = require("./models/Calls");
+const CallModel = require("./models/Calls");
 const http = require("http"); // this is used for socket.io
 const { Server } = require("socket.io");
 
@@ -40,18 +40,9 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Error connecting to MongoDB:", err));
 
-//get request from frontend
-app.get("/getUsers", async (req, res) => {
-  // demo by thunderclient
-  try {
-    const machines = await UserModel.find({});
-    res.json(machines);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching machines" });
-  }
-});
- 
+
+//-------------Endpoints for the machines(2nd)page----------------------------
+
 
 // get machine numbers and console ID s
 app.get("/getMachines", async (req, res) => {
@@ -65,55 +56,18 @@ app.get("/getMachines", async (req, res) => {
   }
 });
 
-app.get("/getCalls", async (req, res) => {
-  // demo by thunderclient
-  try {
-    const color= await CallIDModel.find({});
-    res.json(color);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching machines" });
-  }
-});
-
-
-
-
-//post request from front end
-app.post("/createUser", async (req, res) => {
-  // demo by thunderclient
-
-  const user = req.body;
-  const newUser = new UserModel(user);
-  await newUser.save();
-  res.json(user);
-});
-
 app.post("/createMachine", async (req, res) => {
   // demo by thunderclient
-
   const machine = req.body;
   const newMachine = new ConsoleIDModel(machine);
   await newMachine.save();
   res.json(machine);
 });
 
-app.post("/createCall", async (req, res) => {
-  // demo by thunderclient
-
-  const call = req.body;
-  const newCall = new CallIDModel(call);
-  await newCall.save();
-  res.json(call);
-});
-
-
 app.post("/deletemachine", async (req, res) => {
   try {
     
     const machine = req.body;
-    console.log(machine);
-    // Assuming machine contains the ID of the machine you want to delete
     const deletedMachine = await ConsoleIDModel.deleteOne({ machine: machine.machine });
     if (deletedMachine.deletedCount === 1) {
       res.json({ message: "Machine deleted successfully" });
@@ -124,6 +78,83 @@ app.post("/deletemachine", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+//----------------------------Endpoints for the calls(3rd)page--------------------------------------------------------
+
+app.get("/getCalls", async (req, res) => {
+  try {
+    const call= await CallModel.find({});
+    res.json(call);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching machines" });
+  }
+});
+
+app.post("/createCall", async (req, res) => {
+  const call = req.body;
+  const newCall = new CallModel(call);
+  await newCall.save();
+  res.json(call);
+});
+
+app.post("/deletecall", async (req, res) => {
+  try {
+    
+    const call = req.body;
+    console.log(call);
+    const deletedCall = await CallModel.deleteOne({ Color:call.Color });
+    if (deletedCall.deletedCount === 1) {
+      res.json({ message: "Call deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Call not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
+
+//---------------------------------Endpoints for the depts(4th)page----------------------------------------
+  
+app.get("/getUsers", async (req, res) => {
+   try {
+    const users = await UserModel.find({});
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching users" });
+  }
+});
+ 
+
+app.post("/createUser", async (req, res) => {
+  const user = req.body;
+  const newUser = new UserModel(user);
+  await newUser.save();
+  res.json(user);
+});
+
+app.post("/deleteuser", async (req, res) => {
+  try {
+    
+    const user = req.body;
+    const deletedUser = await UserModel.deleteOne({ name:user.name });
+    if (deletedUser.deletedCount === 1) {
+      res.json({ message: "User deleted successfully" });
+    } else {
+      res.status(404).json({ error: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//----------------------------------------------------------------------------------------
+
+
 
 server.listen(3001, () => {
   //listening for websocket server
