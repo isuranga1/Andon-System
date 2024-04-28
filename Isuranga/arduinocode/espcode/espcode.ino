@@ -3,7 +3,7 @@
 #include <WiFiClientSecure.h>
 
 char path[] = "/";
-char host[] = "192.168.1.3"; // change ip to the server
+char host[] = "192.168.40.183"; // change ip to the server
 
 
 
@@ -30,7 +30,7 @@ void wifiSetup(){ //WiFiManager, Local intialization. Once its business is done,
     WiFiManager wm;
   // reset settings - wipe stored credentials for testing
     // these are stored by the esp library
-   // wm.resetSettings();
+   //wm.resetSettings();
 
     // Automatically connect using saved credentials,
     // if connection fails, it starts an access point with the specified name ( "AutoConnectAP"),
@@ -54,7 +54,7 @@ void wifiSetup(){ //WiFiManager, Local intialization. Once its business is done,
 
 
   // Connect to the websocket server
-  if (client.connect("192.168.1.3", 443)) {  // change ip to the server
+  if (client.connect("192.168.40.183", 443)) {  // change ip to the server
     Serial.println("Connected");
   } else {
     Serial.println("Connection failed.");
