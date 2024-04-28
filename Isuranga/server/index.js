@@ -220,19 +220,19 @@ wsServer.on("request", function (request) {
         console.log("User connected:", socket.id);
 
         // Function to emit an event with the integer value
-        function sendIntegerToFrontend(integerValue) {
-          if (
-            typeof integerValue !== "number" ||
-            !Number.isInteger(integerValue)
-          ) {
-            console.error("Invalid argument: Please provide an integer value.");
-            return;
-          }
+        function sendArrayToFrontend(array) {
+          //if (
+           // typeof array !== "number" ||
+            //!Number.isInteger(array)
+          //) {
+            //console.error("Invalid argument: Please provide an integer value.");
+            //return;
+         // }
 
-          socket.emit("integer_received", integerValue); // Custom event name
+          io.emit("integer_received", array); // Custom event name
         }
 
-        sendIntegerToFrontend(espstatus);
+        sendArrayToFrontend(dataArray);
 
         // Listen for potential disconnections
         socket.on("disconnect", () => {
