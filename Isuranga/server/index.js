@@ -107,6 +107,24 @@ app.post("/createCall", async (req, res) => {
   res.json(call);
 });
 
+
+app.post("/deletemachine", async (req, res) => {
+  try {
+    
+    const machine = req.body;
+    console.log(machine);
+    // Assuming machine contains the ID of the machine you want to delete
+    const deletedMachine = await ConsoleIDModel.deleteOne({ machine: machine.machine });
+    if (deletedMachine.deletedCount === 1) {
+      res.json({ message: "Machine deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Machine not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 server.listen(3001, () => {
   //listening for websocket server
 
