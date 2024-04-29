@@ -3,7 +3,7 @@
 #include <WiFiClientSecure.h>
 
 char path[] = "/";
-char host[] = "192.168.40.183"; // change ip to the server
+char host[] = "192.168.40.183"; // change ip to the server ////
 
 
 
