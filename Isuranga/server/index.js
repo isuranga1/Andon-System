@@ -252,18 +252,12 @@ wsServer.on("request", function (request) {
     if (message.type === "utf8") {
       // console.log('Received Message: ' + message.utf8Data);
       //connection.sendUTF(message.utf8Data); this resend the reseived message, instead of it i will send a custom message. hello from nodejs
+      const receivedData = message.utf8Data;
       const dataArray = JSON.parse(message.utf8Data);
-      const espID = dataArray[0];
-      const espstatus = dataArray[1];
-      const espDowntime = dataArray[2];
-      console.log(
-        "Received Status: " +
-          espstatus +
-          " from:Esp " +
-          espID +
-          " at " +
-          new Date()
-      );
+      let now = new Date();
+      dataArray["callhours"] = now.getHours();
+      dataArray["callminutes"] = now.getMinutes();
+      console.log(dataArray);
 
       io.on("connection", (socket) => {
         console.log("User connected:", socket.id);
@@ -289,7 +283,7 @@ wsServer.on("request", function (request) {
         });
       });
 
-      connection.sendUTF("Hello from node.js");
+      connection.sendUTF("Received Message");
     } else if (message.type === "binary") {
       //console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
       connection.sendBytes(message.binaryData);

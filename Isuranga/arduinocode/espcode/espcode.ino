@@ -1,9 +1,10 @@
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <WebSocketClient.h>
 #include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
 
 char path[] = "/";
-char host[] = "192.168.40.183"; // change ip to the server ////
+char host[] = " 192.168.1.25"; // change ip to the server ////
 
 
 
@@ -40,7 +41,7 @@ void wifiSetup(){ //WiFiManager, Local intialization. Once its business is done,
     bool res;
     // res = wm.autoConnect(); // auto generated AP name from chipid
     // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-    res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
+    res = wm.autoConnect("AutoConnectAPIsuranga","password"); // password protected ap
 
     if(!res) {
         Serial.println("Failed to connect");
@@ -54,7 +55,7 @@ void wifiSetup(){ //WiFiManager, Local intialization. Once its business is done,
 
 
   // Connect to the websocket server
-  if (client.connect("192.168.40.183", 443)) {  // change ip to the server
+  if (client.connect("192.168.1.25", 443)) {  // change ip to the server
     Serial.println("Connected");
   } else {
     Serial.println("Connection failed.");
@@ -83,13 +84,24 @@ void wifiLoop(){
     
     webSocketClient.getData(data);
     if (data.length() > 0) {
-      Serial.print("Received data: ");
+      Serial.print("Received data to Isuranga: ");
       Serial.println(data);
     }
    
-    String dataArray = "[1,2,3]";
-    
-    webSocketClient.sendData(dataArray);
+    StaticJsonDocument<200> doc;
+    doc["consoleid"] = 215;
+    doc["department"] = 14;
+    doc["call1"] = "";
+    doc["call2"] = "";
+    doc["call3"] = "White";
+    doc["oldcall"] = "";
+
+    // Serialize JSON to string
+    String jsonString;
+    serializeJson(doc, jsonString);
+
+    // Send the JSON object
+    webSocketClient.sendData(jsonString);
     
   } else {
     Serial.println("Client disconnected.");
