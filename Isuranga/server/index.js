@@ -25,7 +25,7 @@ app.use(express.json()); // this parses json which gives by frontend to objects 
 app.use(cors()); //import the library
 
 const io = new Server(server, {
-  // Enables CORS for easy connection with React frontend (http://localhost:3000)
+  // Enables CORS for easy connection with React frontend eg:-(http://localhost:3000)
   cors: {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
@@ -40,13 +40,67 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Error connecting to MongoDB:", err));
 
+//------------------------- Endpoints for the 1st page--------------------------------------
 
+app.get("/getGraph", async (req, res) => {
+  // can be demo by thunderclient
+
+  try {
+    const graph = [
+      { x: 0, y: 8 },
+      { x: 1, y: 1 },
+      { x: 2, y: 2 },
+      { x: 3, y: 1 },
+      { x: 4, y: 3 },
+      { x: 5, y: 1 },
+      { x: 6, y: 5 },
+    ];
+    res.json(graph);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: " error graph" });
+  }
+});
+
+app.get("/getActiveCalls", async (req, res) => {
+  // can be demo by thunderclient
+
+  try {
+    const activecalls = [
+      {
+        consoleidin: 1,
+        callhoursin: 3,
+        collmintsin: 4,
+        departmentin: 2,
+        call1in: "Red",
+        call2in: "Yellow",
+        call3in: "Green",
+        oldcallin: "Red",
+      },
+      {
+        consoleidin: 1,
+        callhoursin: 3,
+        collmintsin: 4,
+        departmentin: 2,
+        call1in: "Red",
+        call2in: "Yellow",
+        call3in: "Green",
+        oldcallin: "Red",
+      },
+    ];
+    res.json(activecalls);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "error active calls " });
+  }
+});
 //-------------Endpoints for the machines(2nd)page----------------------------
 
-
 // get machine numbers and console ID s
+
 app.get("/getMachines", async (req, res) => {
-  // demo by thunderclient
+  // can be demo by thunderclient
+
   try {
     const machine = await ConsoleIDModel.find({});
     res.json(machine);
@@ -56,8 +110,10 @@ app.get("/getMachines", async (req, res) => {
   }
 });
 
+// post machine numbers and console ID s to the database
 app.post("/createMachine", async (req, res) => {
-  // demo by thunderclient
+  // can be demo by thunderclient
+
   const machine = req.body;
   const newMachine = new ConsoleIDModel(machine);
   await newMachine.save();
@@ -66,9 +122,10 @@ app.post("/createMachine", async (req, res) => {
 
 app.post("/deletemachine", async (req, res) => {
   try {
-    
     const machine = req.body;
-    const deletedMachine = await ConsoleIDModel.deleteOne({ machine: machine.machine });
+    const deletedMachine = await ConsoleIDModel.deleteOne({
+      machine: machine.machine,
+    });
     if (deletedMachine.deletedCount === 1) {
       res.json({ message: "Machine deleted successfully" });
     } else {
@@ -83,7 +140,7 @@ app.post("/deletemachine", async (req, res) => {
 
 app.get("/getCalls", async (req, res) => {
   try {
-    const call= await CallModel.find({});
+    const call = await CallModel.find({});
     res.json(call);
   } catch (err) {
     console.error(err);
@@ -100,10 +157,9 @@ app.post("/createCall", async (req, res) => {
 
 app.post("/deletecall", async (req, res) => {
   try {
-    
     const call = req.body;
     console.log(call);
-    const deletedCall = await CallModel.deleteOne({ Color:call.Color });
+    const deletedCall = await CallModel.deleteOne({ Color: call.Color });
     if (deletedCall.deletedCount === 1) {
       res.json({ message: "Call deleted successfully" });
     } else {
@@ -114,13 +170,10 @@ app.post("/deletecall", async (req, res) => {
   }
 });
 
-
-
-
 //---------------------------------Endpoints for the depts(4th)page----------------------------------------
-  
+
 app.get("/getUsers", async (req, res) => {
-   try {
+  try {
     const users = await UserModel.find({});
     res.json(users);
   } catch (err) {
@@ -128,7 +181,6 @@ app.get("/getUsers", async (req, res) => {
     res.status(500).json({ message: "Error fetching users" });
   }
 });
- 
 
 app.post("/createUser", async (req, res) => {
   const user = req.body;
@@ -139,9 +191,8 @@ app.post("/createUser", async (req, res) => {
 
 app.post("/deleteuser", async (req, res) => {
   try {
-    
     const user = req.body;
-    const deletedUser = await UserModel.deleteOne({ name:user.name });
+    const deletedUser = await UserModel.deleteOne({ name: user.name });
     if (deletedUser.deletedCount === 1) {
       res.json({ message: "User deleted successfully" });
     } else {
@@ -153,8 +204,6 @@ app.post("/deleteuser", async (req, res) => {
 });
 
 //----------------------------------------------------------------------------------------
-
-
 
 server.listen(3001, () => {
   //listening for websocket server
@@ -222,12 +271,12 @@ wsServer.on("request", function (request) {
         // Function to emit an event with the integer value
         function sendArrayToFrontend(array) {
           //if (
-           // typeof array !== "number" ||
-            //!Number.isInteger(array)
+          // typeof array !== "number" ||
+          //!Number.isInteger(array)
           //) {
-            //console.error("Invalid argument: Please provide an integer value.");
-            //return;
-         // }
+          //console.error("Invalid argument: Please provide an integer value.");
+          //return;
+          // }
 
           io.emit("integer_received", array); // Custom event name
         }
