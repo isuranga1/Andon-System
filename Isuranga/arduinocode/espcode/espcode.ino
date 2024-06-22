@@ -5,8 +5,9 @@
 
 char path[] = "/";
 char host[] = " 192.168.1.25"; // change ip to the server ////
+const int inputPin = 15; // push button
 
-
+int temp;// to record push button state
 
 WebSocketClient webSocketClient;
 WiFiClient client;
@@ -21,6 +22,7 @@ void setup() {
     // put your setup code here, to run once:
     Serial.begin(115200);
     wifiSetup();
+    pinMode(inputPin, INPUT);
    }
 
 void loop() {
@@ -88,21 +90,49 @@ void wifiLoop(){
       Serial.println(data);
     }
    
-    StaticJsonDocument<200> doc;
-    doc["consoleid"] = 215;
-    doc["department"] = 14;
-    doc["call1"] = "";
-    doc["call2"] = "";
-    doc["call3"] = "White";
-    doc["oldcall"] = "";
+    StaticJsonDocument<200> doc1;
+    doc1["consoleidin"] = 500;
+    doc1["department"] = 14;
+    doc1["call1"] = "";
+    doc1["call2"] = "";
+    doc1["call3"] = "White";
+    doc1["oldcall"] = "";
 
-    // Serialize JSON to string
-    String jsonString;
-    serializeJson(doc, jsonString);
+    StaticJsonDocument<200> doc2;
+    doc2["stat1"] = "55";
+    doc2["stat2"] = "14";
+    doc2["stat3"] = "434";
+
+    int inputValue = digitalRead(inputPin); // read the pushbutton state
 
     // Send the JSON object
-    webSocketClient.sendData(jsonString);
+    //if (inputValue!=temp){
+
+    Serial.print("Digital Read from Pin 15: ");
+   if (inputValue==1) {
+      doc1["consoleidin"] = 502;
+      doc2["stat1"] = "70";
+      Serial.print("Digital Read from Pin 15: ");
+      Serial.println(inputValue);
+  } else {
+      doc1["consoleidin"] = 100;
+      doc2["stat1"] = "4550";
+      Serial.print("Digital Read from Pin 15: ");
+      Serial.println(inputValue);
+  } 
+      // Serialize JSON to string
+    String jsonString1;
+    serializeJson(doc1, jsonString1);
+    webSocketClient.sendData(jsonString1);
     
+    
+    //String jsonString2;
+   // serializeJson(doc2, jsonString2);
+    //webSocketClient.sendData(jsonString2);
+
+    Serial.print("sent data to backend: ");
+    
+
   } else {
     Serial.println("Client disconnected.");
     while (1) {

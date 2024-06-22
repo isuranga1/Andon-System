@@ -42,6 +42,21 @@ mongoose
 
 //------------------------- Endpoints for the 1st page--------------------------------------
 
+let activecalls = [
+  {
+    consoleidin: 215,
+    callhoursin: 3,
+    collmintsin: 4,
+    departmentin: 2,
+    call1in: "Red",
+    call2in: "Yellow",
+    call3in: "Green",
+    oldcallin: "Red",
+  },
+];
+
+let statarray = { stat1: "120", stat2: "120", stat3: "120" };
+
 app.get("/getGraph", async (req, res) => {
   // can be demo by thunderclient
 
@@ -66,28 +81,6 @@ app.get("/getActiveCalls", async (req, res) => {
   // can be demo by thunderclient
 
   try {
-    const activecalls = [
-      {
-        consoleidin: 1,
-        callhoursin: 3,
-        collmintsin: 4,
-        departmentin: 2,
-        call1in: "Red",
-        call2in: "Yellow",
-        call3in: "Green",
-        oldcallin: "Red",
-      },
-      {
-        consoleidin: 1,
-        callhoursin: 3,
-        collmintsin: 4,
-        departmentin: 2,
-        call1in: "Red",
-        call2in: "Yellow",
-        call3in: "Green",
-        oldcallin: "Red",
-      },
-    ];
     res.json(activecalls);
   } catch (err) {
     console.error(err);
@@ -254,34 +247,29 @@ wsServer.on("request", function (request) {
       //connection.sendUTF(message.utf8Data); this resend the reseived message, instead of it i will send a custom message. hello from nodejs
       const receivedData = message.utf8Data;
       const dataArray = JSON.parse(message.utf8Data);
-      let now = new Date();
-      dataArray["callhours"] = now.getHours();
-      dataArray["callminutes"] = now.getMinutes();
-      console.log(dataArray);
 
-      io.on("connection", (socket) => {
-        console.log("User connected:", socket.id);
+      if ("consoleidin" in dataArray) {
+        let now = new Date();
+        dataArray["callhours"] = now.getHours();
+        dataArray["callminutes"] = now.getMinutes();
 
-        // Function to emit an event with the integer value
-        function sendArrayToFrontend(array) {
-          //if (
-          // typeof array !== "number" ||
-          //!Number.isInteger(array)
-          //) {
-          //console.error("Invalid argument: Please provide an integer value.");
-          //return;
-          // }
-
-          io.emit("integer_received", array); // Custom event name
+        let index = activecalls.findIndex(
+          (obj) => obj.consoleidin === dataArray["consoleidin"]
+        );
+        // If found, replace the object; otherwise, do nothing
+        if (index !== -1) {
+          activecalls[index] = dataArray;
+        } else {
+          activecalls.push(dataArray);
         }
+      } else {
+        statarray = dataArray;
+      }
 
-        sendArrayToFrontend(dataArray);
-
-        // Listen for potential disconnections
-        socket.on("disconnect", () => {
-          console.log("User disconnected:", socket.id);
-        });
-      });
+      io.emit("statUpdate", statarray);
+      io.emit("callUpdate", activecalls);
+      console.log(statarray);
+      console.log(activecalls);
 
       connection.sendUTF("Received Message");
     } else if (message.type === "binary") {
@@ -295,6 +283,33 @@ wsServer.on("request", function (request) {
     console.log(
       new Date() + " Peer " + connection.remoteAddress + " disconnected."
     );
+  });
+});
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  // Function to emit an event with the integer value
+  //function sendArrayToFrontend(sockettype, array) {
+  //if (
+  // typeof array !== "number" ||
+  //!Number.isInteger(array)
+  //) {
+  //console.error("Invalid argument: Please provide an integer value.");
+  //return;
+  // }
+
+  // Custom event name
+  //}
+
+  // sendArrayToFrontend("callUpdate", activecalls);
+  // console.log(activecalls);
+  //sendArrayToFrontend("statUpdate", statarray);
+  //console.log(statarray);
+
+  // Listen for potential disconnections
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 });
 // endcode for esp 32
