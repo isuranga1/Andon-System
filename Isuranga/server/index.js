@@ -265,8 +265,9 @@ wsServer.on("request", function (request) {
             array1["call3in"] != dataArray["call3in"]
           ) {
             activecalls[index] = dataArray;
-            io.emit("callUpdate", dataArray);
-            console.log(activecalls);
+            //io.emit("callUpdate", dataArray);
+            //console.log(activecalls);
+            array1 = activecalls[index];
 
             if (
               array1["call1in"] == "" &&
@@ -274,7 +275,7 @@ wsServer.on("request", function (request) {
               array1["call3in"] == ""
             ) {
               activecalls = activecalls.filter(
-                (item) => item.consoleidin !== array1["consoleidin"]
+                (item) => item.consoleidin != array1["consoleidin"]
               );
             }
           }
@@ -287,14 +288,16 @@ wsServer.on("request", function (request) {
             )
           ) {
             activecalls.push(dataArray);
-            io.emit("callUpdate", dataArray);
+            //io.emit("callUpdate", dataArray);
             console.log(activecalls);
           }
         }
       }
 
+      io.emit("callUpdate", activecalls);
+      //io.emit("statUpdate", statarray);
       console.log(statarray);
-
+      console.log(activecalls);
       connection.sendUTF("Received Message");
     } else if (message.type === "binary") {
       //console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
@@ -312,8 +315,8 @@ wsServer.on("request", function (request) {
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
+  io.emit("callUpdate", activecalls);
   io.emit("statUpdate", statarray);
-  console.log(statarray);
   // Function to emit an event with the integer value
   //function sendArrayToFrontend(sockettype, array) {
   //if (
