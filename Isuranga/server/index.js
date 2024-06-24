@@ -55,7 +55,7 @@ let activecalls = [
   },
 ];
 
-let statarray = { stat1: "120", stat2: "120", stat3: "120" };
+let statarray = { stat1: "5 hours", stat2: "4", stat3: "80%" };
 
 app.get("/getGraph", async (req, res) => {
   // can be demo by thunderclient
@@ -256,20 +256,44 @@ wsServer.on("request", function (request) {
         let index = activecalls.findIndex(
           (obj) => obj.consoleidin === dataArray["consoleidin"]
         );
-        // If found, replace the object; otherwise, do nothing
+
         if (index !== -1) {
-          activecalls[index] = dataArray;
+          let array1 = activecalls[index];
+          if (
+            array1["call1in"] != dataArray["call1in"] ||
+            array1["call2in"] != dataArray["call2in"] ||
+            array1["call3in"] != dataArray["call3in"]
+          ) {
+            activecalls[index] = dataArray;
+            io.emit("callUpdate", dataArray);
+            console.log(activecalls);
+
+            if (
+              array1["call1in"] == "" &&
+              array1["call2in"] == "" &&
+              array1["call3in"] == ""
+            ) {
+              activecalls = activecalls.filter(
+                (item) => item.consoleidin !== array1["consoleidin"]
+              );
+            }
+          }
         } else {
-          activecalls.push(dataArray);
+          if (
+            !(
+              dataArray["call1in"] == "" &&
+              dataArray["call2in"] == "" &&
+              dataArray["call3in"] == ""
+            )
+          ) {
+            activecalls.push(dataArray);
+            io.emit("callUpdate", dataArray);
+            console.log(activecalls);
+          }
         }
-      } else {
-        statarray = dataArray;
       }
 
-      io.emit("statUpdate", statarray);
-      io.emit("callUpdate", activecalls);
       console.log(statarray);
-      console.log(activecalls);
 
       connection.sendUTF("Received Message");
     } else if (message.type === "binary") {
@@ -288,7 +312,8 @@ wsServer.on("request", function (request) {
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
-
+  io.emit("statUpdate", statarray);
+  console.log(statarray);
   // Function to emit an event with the integer value
   //function sendArrayToFrontend(sockettype, array) {
   //if (
