@@ -44,14 +44,14 @@ mongoose
 
 let activecalls = [
   {
-    consoleidin: 215,
-    callhoursin: 3,
-    collmintsin: 4,
-    departmentin: 2,
-    call1in: "Red",
-    call2in: "Yellow",
-    call3in: "Green",
-    oldcallin: "Red",
+    consoleid: 215,
+    callhours: 3,
+    collmints: 4,
+    department: 2,
+    call1: "Red",
+    call2: "",
+    call3: "",
+    oldcall: "",
   },
 ];
 
@@ -248,21 +248,21 @@ wsServer.on("request", function (request) {
       const receivedData = message.utf8Data;
       const dataArray = JSON.parse(message.utf8Data);
 
-      if ("consoleidin" in dataArray) {
+      if ("consoleid" in dataArray) {
         let now = new Date();
-        dataArray["callhours"] = now.getHours();
-        dataArray["callminutes"] = now.getMinutes();
+        (dataArray["callhours"] = String(now.getHours()).padStart(2, "0")),
+          (dataArray["collmints"] = String(now.getMinutes()).padStart(2, "0"));
 
         let index = activecalls.findIndex(
-          (obj) => obj.consoleidin === dataArray["consoleidin"]
+          (obj) => obj.consoleid === dataArray["consoleid"]
         );
 
         if (index !== -1) {
           let array1 = activecalls[index];
           if (
-            array1["call1in"] != dataArray["call1in"] ||
-            array1["call2in"] != dataArray["call2in"] ||
-            array1["call3in"] != dataArray["call3in"]
+            array1["call1"] != dataArray["call1"] ||
+            array1["call2"] != dataArray["call2"] ||
+            array1["call3"] != dataArray["call3"]
           ) {
             activecalls[index] = dataArray;
             //io.emit("callUpdate", dataArray);
@@ -270,21 +270,21 @@ wsServer.on("request", function (request) {
             array1 = activecalls[index];
 
             if (
-              array1["call1in"] == "" &&
-              array1["call2in"] == "" &&
-              array1["call3in"] == ""
+              array1["call1"] == "" &&
+              array1["call2"] == "" &&
+              array1["call3"] == ""
             ) {
               activecalls = activecalls.filter(
-                (item) => item.consoleidin != array1["consoleidin"]
+                (item) => item.consoleid != array1["consoleid"]
               );
             }
           }
         } else {
           if (
             !(
-              dataArray["call1in"] == "" &&
-              dataArray["call2in"] == "" &&
-              dataArray["call3in"] == ""
+              dataArray["call1"] == "" &&
+              dataArray["call2"] == "" &&
+              dataArray["call3"] == ""
             )
           ) {
             activecalls.push(dataArray);

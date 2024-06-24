@@ -91,11 +91,11 @@ void wifiLoop(){
     }
    
     StaticJsonDocument<200> doc1;
-    doc1["consoleidin"] = 500;
-    doc1["departmentin"] = 14;
-    doc1["call1in"] = "";
-    doc1["call2in"] = "";
-    doc1["call3in"] = "";
+    doc1["consoleid"] = 500;
+    doc1["department"] = 14;
+    doc1["call1"] = "";
+    doc1["call2"] = "";
+    doc1["call3"] = "";
     doc1["oldcall"] = "";
 
     StaticJsonDocument<200> doc2;
@@ -110,12 +110,12 @@ void wifiLoop(){
 
     Serial.print("Digital Read from Pin 15: ");
    if (inputValue==1) {
-      doc1["call3in"] = "White";
+      doc1["call3"] = "White";
       doc2["stat1"] = "70";
       Serial.print("Digital Read from Pin 15: ");
       Serial.println(inputValue);
   } else {
-      doc1["call3in"] = "";
+      doc1["call3"] = "";
       doc2["stat1"] = "4550";
       Serial.print("Digital Read from Pin 15: ");
       Serial.println(inputValue);
