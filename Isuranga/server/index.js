@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const UserModel = require("./models/Users");
 const ConsoleIDModel = require("./models/ConsoleIds");
 const CallModel = require("./models/Calls");
+const RecordModel = require("./models/Records");
 const http = require("http"); // this is used for socket.io
 const { Server } = require("socket.io");
 
@@ -13,6 +14,9 @@ const server = http.createServer(app); // for sockets
 //connect esp32 using websockets
 var WebSocketServer = require("websocket").server;
 const port = 443;
+
+const WebSocket = require("ws");
+const wss = new WebSocket.Server({ port: 8080 });
 
 var serverforEsp = http.createServer(function (request, response) {
   console.log(new Date() + " Received request for " + request.url);
@@ -35,12 +39,18 @@ const io = new Server(server, {
 //database connection initilaisation
 mongoose
   .connect(
-    "mongodb+srv://isuranga1:Nevira2001@cluster0.gkszxqj.mongodb.net/andondb?retryWrites=true&w=majority&appName=Cluster0"
+    "mongodb+srv://isuranga1:Nevira2001@cluster0.gkszxqj.mongodb.net/andondb?retryWrites=true&w=majority&appName=Cluster0",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
   ) //Change this to the according database
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Error connecting to MongoDB:", err));
 
 //------------------------- Endpoints for the 1st page--------------------------------------
+
+let recordedcalls = [];
 
 let activecalls = [
   {
@@ -196,7 +206,20 @@ app.post("/deleteuser", async (req, res) => {
   }
 });
 
-//----------------------------------------------------------------------------------------
+//-------endpoint for records to database---------------------------------------------------------------------------------
+
+// Example function to save a record into the database
+const saveRecordToDatabase = async (recordData) => {
+  try {
+    const newRecord = new RecordModel(recordData);
+    await newRecord.save();
+    console.log("Record saved successfully:", newRecord);
+  } catch (error) {
+    console.error("Error saving record:", error);
+  }
+};
+
+//------------------------------------------------
 
 server.listen(3001, () => {
   //listening for websocket server
@@ -227,32 +250,28 @@ function originIsAllowed(origin) {
   return true;
 }
 
-wsServer.on("request", function (request) {
-  console.log(request);
-  if (!originIsAllowed(request.origin)) {
-    // Make sure we only accept requests from an allowed origin
-    request.reject();
-    console.log(
-      new Date() + " Connection from origin " + request.origin + " rejected."
-    );
-    return;
-  }
+wss.on("connection", (ws) => {
+  console.log("Client connected");
 
-  var connection = request.accept(null, request.origin);
-  console.log(new Date() + " Connection accepted.");
-
-  connection.on("message", function (message) {
-    if (message.type === "utf8") {
+  ws.on("message", (message) => {
+    //console.log(`Received: ${message}`);
+    //const response = "Hello from Node.js server";
+    //console.log(`Sending: ${response}`);
+    //ws.send(response);
+    if (message.type !== "utf8") {
+      console.log("messgae is not utf");
       // console.log('Received Message: ' + message.utf8Data);
       //connection.sendUTF(message.utf8Data); this resend the reseived message, instead of it i will send a custom message. hello from nodejs
       const receivedData = message.utf8Data;
-      const dataArray = JSON.parse(message.utf8Data);
+      //const dataArray = JSON.parse(message.utf8Data);
+      const dataArray = JSON.parse(message);
 
       if ("consoleid" in dataArray) {
         let now = new Date();
         (dataArray["callhours"] = String(now.getHours()).padStart(2, "0")),
           (dataArray["collmints"] = String(now.getMinutes()).padStart(2, "0"));
-
+        console.log(dataArray);
+        saveRecordToDatabase(dataArray);
         let index = activecalls.findIndex(
           (obj) => obj.consoleid === dataArray["consoleid"]
         );
@@ -298,18 +317,15 @@ wsServer.on("request", function (request) {
       //io.emit("statUpdate", statarray);
       console.log(statarray);
       console.log(activecalls);
-      connection.sendUTF("Received Message");
+      //connection.sendUTF("Received Message");
     } else if (message.type === "binary") {
       //console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-      connection.sendBytes(message.binaryData);
+      //connection.sendBytes(message.binaryData);
     }
   });
   //
-
-  connection.on("close", function (reasonCode, description) {
-    console.log(
-      new Date() + " Peer " + connection.remoteAddress + " disconnected."
-    );
+  ws.on("close", () => {
+    console.log("Client disconnected");
   });
 });
 
@@ -341,3 +357,37 @@ io.on("connection", (socket) => {
   });
 });
 // endcode for esp 32
+
+//------------------------------download csv
+
+const downloadCollectionAsCSV = async () => {
+  try {
+    // Fetch all records from the collection
+    const records = await RecordModel.find({}).lean();
+
+    // Define the fields for the CSV
+    const fields = [
+      "consoleid",
+      "callhours",
+      "collmints",
+      "department",
+      "call1",
+      "call2",
+      "call3",
+      "oldcall",
+    ];
+
+    // Convert JSON to CSV
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(records);
+
+    // Save CSV to a file
+    const filePath = "/download.csv";
+    fs.writeFileSync(filePath, csv);
+
+    console.log(`CSV file saved at ${filePath}`);
+  } catch (error) {
+    console.error("Error exporting collection as CSV:", error);
+  } finally {
+  }
+};
