@@ -7,6 +7,8 @@ const CallModel = require("./models/Calls");
 const RecordModel = require("./models/Records");
 const http = require("http"); // this is used for socket.io
 const { Server } = require("socket.io");
+const { Parser } = require("json2csv");
+const fs = require("fs");
 
 const cors = require("cors"); // connects to react
 const server = http.createServer(app); // for sockets
@@ -14,6 +16,7 @@ const server = http.createServer(app); // for sockets
 //connect esp32 using websockets
 var WebSocketServer = require("websocket").server;
 const port = 443;
+let statarray = {};
 
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({ port: 8080 });
@@ -58,14 +61,12 @@ let activecalls = [
     callhours: 3,
     collmints: 4,
     department: 2,
-    call1: "Red",
+    call1: "Blue",
     call2: "",
     call3: "",
     oldcall: "",
   },
 ];
-
-let statarray = { stat1: "5 hours", stat2: "4", stat3: "80%" };
 
 app.get("/getGraph", async (req, res) => {
   // can be demo by thunderclient
@@ -271,7 +272,7 @@ wss.on("connection", (ws) => {
         (dataArray["callhours"] = String(now.getHours()).padStart(2, "0")),
           (dataArray["collmints"] = String(now.getMinutes()).padStart(2, "0"));
         console.log(dataArray);
-        saveRecordToDatabase(dataArray);
+
         let index = activecalls.findIndex(
           (obj) => obj.consoleid === dataArray["consoleid"]
         );
@@ -287,6 +288,7 @@ wss.on("connection", (ws) => {
             //io.emit("callUpdate", dataArray);
             //console.log(activecalls);
             array1 = activecalls[index];
+            saveRecordToDatabase(array1);
 
             if (
               array1["call1"] == "" &&
@@ -317,6 +319,11 @@ wss.on("connection", (ws) => {
       //io.emit("statUpdate", statarray);
       console.log(statarray);
       console.log(activecalls);
+      statarray = {
+        stat1: "5 hours",
+        stat2: activecalls.length,
+        stat3: "80%",
+      };
       //connection.sendUTF("Received Message");
     } else if (message.type === "binary") {
       //console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
@@ -332,6 +339,7 @@ wss.on("connection", (ws) => {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
   io.emit("callUpdate", activecalls);
+
   io.emit("statUpdate", statarray);
   // Function to emit an event with the integer value
   //function sendArrayToFrontend(sockettype, array) {
@@ -382,12 +390,14 @@ const downloadCollectionAsCSV = async () => {
     const csv = json2csvParser.parse(records);
 
     // Save CSV to a file
-    const filePath = "/download.csv";
+    const filePath = "yourFile.csv";
     fs.writeFileSync(filePath, csv);
 
     console.log(`CSV file saved at ${filePath}`);
   } catch (error) {
     console.error("Error exporting collection as CSV:", error);
   } finally {
+    //mongoose.connection.close(); // Close the connection once done
   }
 };
+downloadCollectionAsCSV();
