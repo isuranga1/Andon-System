@@ -55,18 +55,7 @@ mongoose
 
 let recordedcalls = [];
 
-let activecalls = [
-  {
-    consoleid: 215,
-    callhours: 3,
-    collmints: 4,
-    department: 2,
-    call1: "Blue",
-    call2: "",
-    call3: "",
-    oldcall: "",
-  },
-];
+let activecalls = [];
 
 app.get("/getGraph", async (req, res) => {
   // can be demo by thunderclient
@@ -269,8 +258,8 @@ wss.on("connection", (ws) => {
 
       if ("consoleid" in dataArray) {
         let now = new Date();
-        (dataArray["callhours"] = String(now.getHours()).padStart(2, "0")),
-          (dataArray["collmints"] = String(now.getMinutes()).padStart(2, "0"));
+        dataArray["callhours"] = String(now.getHours()).padStart(2, "0");
+        dataArray["collmints"] = String(now.getMinutes()).padStart(2, "0");
         console.log(dataArray);
 
         let index = activecalls.findIndex(
@@ -280,36 +269,50 @@ wss.on("connection", (ws) => {
         if (index !== -1) {
           let array1 = activecalls[index];
           if (
-            array1["call1"] != dataArray["call1"] ||
-            array1["call2"] != dataArray["call2"] ||
-            array1["call3"] != dataArray["call3"]
+            array1["call1"] !== dataArray["call1"] ||
+            array1["call2"] !== dataArray["call2"] ||
+            array1["call3"] !== dataArray["call3"]
           ) {
+            // Update the call details
             activecalls[index] = dataArray;
-            //io.emit("callUpdate", dataArray);
-            //console.log(activecalls);
-            array1 = activecalls[index];
-            saveRecordToDatabase(array1);
 
+            // Check if all calls have ended
             if (
-              array1["call1"] == "" &&
-              array1["call2"] == "" &&
-              array1["call3"] == ""
+              dataArray["call1"] === "" &&
+              dataArray["call2"] === "" &&
+              dataArray["call3"] === ""
             ) {
+              // Calculate the call duration
+              let callEndTime = new Date();
+              let callStartTime = array1["callStartTime"];
+              let callDuration = (callEndTime - callStartTime) / 1000; // duration in seconds
+
+              array1["callDuration"] = callDuration;
+
+              // Save the record with duration
+              saveRecordToDatabase(array1);
+              downloadCollectionAsCSV();
+
+              // Remove the call from active calls
               activecalls = activecalls.filter(
-                (item) => item.consoleid != array1["consoleid"]
+                (item) => item.consoleid !== array1["consoleid"]
               );
+            } else {
+              // Save the updated record without ending the call
+              saveRecordToDatabase(dataArray);
             }
           }
         } else {
+          // New call detected, store the start time
           if (
             !(
-              dataArray["call1"] == "" &&
-              dataArray["call2"] == "" &&
-              dataArray["call3"] == ""
+              dataArray["call1"] === "" &&
+              dataArray["call2"] === "" &&
+              dataArray["call3"] === ""
             )
           ) {
+            dataArray["callStartTime"] = now;
             activecalls.push(dataArray);
-            //io.emit("callUpdate", dataArray);
             console.log(activecalls);
           }
         }
@@ -320,9 +323,9 @@ wss.on("connection", (ws) => {
       console.log(statarray);
       console.log(activecalls);
       statarray = {
-        stat1: "5 hours",
+        stat1: "0 hours",
         stat2: activecalls.length,
-        stat3: "80%",
+        stat3: "2%",
       };
       //connection.sendUTF("Received Message");
     } else if (message.type === "binary") {
@@ -383,6 +386,7 @@ const downloadCollectionAsCSV = async () => {
       "call2",
       "call3",
       "oldcall",
+      "callDuration",
     ];
 
     // Convert JSON to CSV
@@ -400,4 +404,3 @@ const downloadCollectionAsCSV = async () => {
     //mongoose.connection.close(); // Close the connection once done
   }
 };
-downloadCollectionAsCSV();

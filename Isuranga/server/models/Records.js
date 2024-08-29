@@ -18,6 +18,7 @@ const RecordSchema = new mongoose.Schema({
   call1: { type: String, default: "" }, // Set default value to ''
   call2: { type: String, default: "" },
   call3: { type: String, default: "" },
+  callDuration: { type: String, default: "" },
 });
 
 const RecordModel = mongoose.model("recordcollection", RecordSchema);
